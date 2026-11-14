@@ -15,8 +15,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Rust
-        uses: dtolnay/rust-toolchain@stable
+      - name: Install repository-pinned Rust
+        run: rustup show
 
       - name: Publish fallout-se-core
         run: cargo publish -p fallout-se-core

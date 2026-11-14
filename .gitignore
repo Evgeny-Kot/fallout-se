@@ -2,3 +2,4 @@ docs/
 target/
 crates/fallout_web/dist/
 crates/fallout_web/.trunk/
+tools/browser/node_modules/

@@ -2,7 +2,12 @@
 
 `fallout-se` aims to be a modern, cross-platform, and open source save editor for Fallout 1 and 2.
 
-There is a web based version [here](https://ali-raheem.github.io/fallout-se/), the web based save editor is in very early testing [here](https://ali-raheem.github.io/fallout-se/editor.html).
+This fork is maintained at [Evgeny-Kot/fallout-se](https://github.com/Evgeny-Kot/fallout-se).
+It builds on [Ali Raheem's original project](https://github.com/ali-raheem/fallout-se); original authorship and licenses are retained.
+
+For the experimental Fallout 2 RPU browser quantity editor, use the
+[cross-platform build and validation guide](BUILDING.md) and [RPU workflow](rpu-browser-mvp.md).
+Build and serve this checkout locally; the original project's hosted site is not a deployment of this fork.
 
 I started this project because the most popular save file editor, [Falche](https://www.nma-fallout.com/resources/falche-fallout-1-editor.15/), is Windows-only, closed source, and appears unmaintained.
 

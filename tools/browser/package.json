@@ -1,0 +1,12 @@
+{
+  "name": "fallout-se-browser-regression",
+  "private": true,
+  "version": "0.0.0",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "verify-dist": "node verify-dist.mjs",
+    "smoke": "node smoke.mjs",
+    "real-resource": "node rpu-real-resource.cjs"
+  },
+  "devDependencies": { "playwright": "1.65.1" }
+}

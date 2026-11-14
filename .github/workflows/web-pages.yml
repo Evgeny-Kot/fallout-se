@@ -18,39 +18,27 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Rust
-        uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-python@v5
         with:
-          targets: wasm32-unknown-unknown
-
-      - name: Install Trunk
-        uses: jetli/trunk-action@v0.5.0
+          python-version: '3.12.10'
+      - uses: actions/setup-node@v4
         with:
-          version: latest
-
+          node-version: '26.13.1'
+      - name: Install repository-pinned Rust
+        run: rustup show
+      - name: Install locked binding generator
+        run: cargo install wasm-bindgen-cli --version 0.2.108 --locked --root target/wasm-tools
       - name: Configure GitHub Pages
-        id: pages
         uses: actions/configure-pages@v5
-
-      - name: Compute Trunk public URL
-        id: trunk
-        shell: bash
-        run: |
-          base_path="${{ steps.pages.outputs.base_path }}"
-          if [ "$base_path" = "/" ] || [ -z "$base_path" ]; then
-            echo "public_url=/" >> "$GITHUB_OUTPUT"
-          else
-            echo "public_url=${base_path%/}/" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Build static web app
-        working-directory: crates/fallout_web
-        run: trunk build --release --public-url "${{ steps.trunk.outputs.public_url }}"
+      - name: Build static web app with relative URLs
+        run: python tools/build_web.py
+      - name: Verify distribution
+        run: node tools/browser/verify-dist.mjs
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
@@ -59,7 +47,7 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

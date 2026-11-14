@@ -12,7 +12,9 @@ struct ExpectedSection {
 }
 
 fn save_dir() -> PathBuf {
-    PathBuf::from(r"C:\FalloutRE\saves")
+    PathBuf::from(std::env::var_os("FALLOUT_LAYOUT_FIXTURE_DIR").expect(
+        "Set FALLOUT_LAYOUT_FIXTURE_DIR to the directory containing OLD.DAT, RPU.DAT and RPU-TEST.DAT",
+    ))
 }
 
 fn sha256(path: &Path) -> String {
@@ -57,11 +59,6 @@ fn section<'a>(json: &'a Value, id: &str) -> &'a Value {
 
 fn check_save(filename: &str, expected_hash: &str, expected_sections: &[ExpectedSection]) {
     let path = save_dir().join(filename);
-
-    if !path.exists() {
-        eprintln!("SKIP: local fixture missing: {}", path.display());
-        return;
-    }
 
     assert!(
         path.is_file(),
@@ -125,6 +122,7 @@ fn check_save(filename: &str, expected_hash: &str, expected_sections: &[Expected
 }
 
 #[test]
+#[ignore = "requires explicit FALLOUT_LAYOUT_FIXTURE_DIR and certutil on Windows"]
 fn old_layout_regression() {
     check_save(
         "OLD.DAT",
@@ -155,6 +153,7 @@ fn old_layout_regression() {
 }
 
 #[test]
+#[ignore = "requires explicit FALLOUT_LAYOUT_FIXTURE_DIR and certutil on Windows"]
 fn rpu_layout_regression() {
     check_save(
         "RPU.DAT",
@@ -185,6 +184,7 @@ fn rpu_layout_regression() {
 }
 
 #[test]
+#[ignore = "requires explicit FALLOUT_LAYOUT_FIXTURE_DIR and certutil on Windows"]
 fn rpu_test_layout_regression() {
     check_save(
         "RPU-TEST.DAT",
