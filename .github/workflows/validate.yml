@@ -1,0 +1,71 @@
+name: Validate development baseline
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows x64
+            os: windows-2022
+            arch: X64
+          - name: Linux x64
+            os: ubuntu-24.04
+            arch: X64
+          - name: macOS Apple Silicon
+            os: macos-15
+            arch: ARM64
+          - name: macOS Intel
+            os: macos-15-intel
+            arch: X64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26.13.1'
+      - name: Check runner architecture
+        shell: bash
+        run: test "$RUNNER_ARCH" = "${{ matrix.arch }}"
+      - name: Install repository-pinned Rust toolchain
+        run: rustup show
+      - name: Rust workspace regression tests
+        run: cargo test --workspace --locked
+      - name: Formatting
+        run: cargo fmt --all -- --check
+      - name: Patch whitespace
+        run: git diff --check
+      - name: JavaScript unit tests
+        run: node --test crates/fallout_web/rpu-editor.test.mjs
+      - name: Install locked binding generator
+        run: cargo install wasm-bindgen-cli --version 0.2.108 --locked --root target/wasm-tools
+      - name: Release web build
+        run: python tools/build_web.py
+      - name: Verify distribution and initialize WASM
+        run: node tools/browser/verify-dist.mjs
+      - name: Install locked browser automation dependencies
+        run: npm ci --prefix tools/browser --ignore-scripts
+      - name: Install Playwright Chromium and system dependencies
+        working-directory: tools/browser
+        run: npx --no-install playwright install --with-deps chromium
+      - name: Browser smoke without game resources
+        run: node tools/browser/smoke.mjs
+      - name: Upload verified static distribution
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-${{ matrix.os }}-${{ matrix.arch }}
+          path: crates/fallout_web/dist/
+          if-no-files-found: error
