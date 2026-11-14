@@ -2,9 +2,16 @@
 
 The existing browser/WASM editor now has a separate experimental RPU quantity panel. It runs locally in a desktop browser on a static HTTP site: no native GUI, local editing service, or Windows filesystem API is used. Do not use the legacy JSON/inventory editor for RPU quantity editing. Opening experimental mode clears/disables legacy controls; the two editing states never share an output.
 
+## Reproducible tooling and tests
+
+Use [BUILDING.md](BUILDING.md) for the pinned Rust 1.100.0 toolchain, Python and
+Node prerequisites, CI matrix, portable asset-free smoke test, and explicitly
+opt-in real-resource test. Historical results below describe the original MVP;
+they are not new cross-platform runtime evidence.
+
 ## Build and launch (Windows 11)
 
-Prerequisites: Rust/Cargo/rustup, Python 3, and a current 64-bit desktop browser with directory upload support. Run these commands in PowerShell from the project root:
+Prerequisites: Rust/Cargo/rustup, Python 3.11+, and a current 64-bit desktop browser with directory upload support. Run these commands in PowerShell from the project root:
 
 ```powershell
 cd C:\FalloutRE\src\fallout-se
@@ -18,7 +25,7 @@ Open `http://127.0.0.1:8765/editor.html` manually. If port 8765 is already servi
 
 ## Build and launch (macOS Apple Silicon or Intel; Linux)
 
-Use a native Rust installation for your machine, Python 3 and a current 64-bit desktop browser with directory uploads. From your checkout directory:
+Use a native Rust installation for your machine, Python 3.11+ and a current 64-bit desktop browser with directory uploads. From your checkout directory:
 
 ```sh
 rustup target add wasm32-unknown-unknown
@@ -29,12 +36,12 @@ python3 -m http.server 8765 --bind 127.0.0.1 --directory crates/fallout_web/dist
 
 Open `http://127.0.0.1:8765/editor.html`. The same wasm32 artifact is used on all hosts; the build helper selects the host binding-generator executable. Paths are selected in the browser, not hardcoded for Windows. macOS and Linux runtime testing has **not** been performed in this step. The WASM target was built and exercised in Chrome on Windows. A browser directory picker is required; browsers without it are outside this MVP. Large archives need substantial available memory (multiple copies of roughly 462 MB of baseline input can coexist during inspection), so this is a desktop workflow, not a mobile-memory claim.
 
-The existing Trunk deployment workflow also remains supported: index.html now copies rpu-editor.js and the resource-declaration example along with the prior editor assets. Trunk itself was not run locally in this step; the direct build helper above was run successfully.
+The Pages deployment workflow now uses the pinned direct build helper. Trunk configuration remains available as an optional alternative, but is not the Phase 6 reproducible validation path.
 
 ## Use the editor
 
 1. Expand **Experimental Fallout 2 RPU quantity editor**. The legacy form below becomes inactive.
-2. Choose the **complete save-slot folder**, preserving its relative hierarchy. For the retained test candidate, select `rpu-runtime-test/SLOT-CANDIDATE`. Do not select only SAVE.DAT. Other platforms can use an unchanged copy of that complete directory. The picker is read-only.
+2. Choose the **complete save-slot folder**, preserving its relative hierarchy. The historical `rpu-runtime-test/SLOT-CANDIDATE` is a local artifact, not a distributed fixture. Select your own backed-up complete slot. Do not select only SAVE.DAT. Other platforms can use an unchanged copy of that complete directory. The picker is read-only.
 3. Choose your intended `rpu.dat` and `master.dat` archives. The explicit offline order is RPU first, base second. No filesystem discovery, configured extra mods, loose resource fallback or runtime hooks are imported.
 4. Supply a **resource declaration JSON**. Download the example from the panel or use `crates/fallout_web/rpu-resource-declaration.example.json`. Its expected hashes identify the archives used in the verified runtime baseline:
    - rpu.dat: `27db830e0fb67d02b60e166e2acb772a92292f5f4dd88f733b740b406a0864ee`
@@ -76,16 +83,9 @@ git diff --check
 python3 tools/build_web.py
 ```
 
-Use `python` on Windows. Optional real-resource browser test (requires Node and Playwright; installation stays in ignored target):
-
-```sh
-npm install --prefix target/browser-tests playwright
-# Either install Playwright Chromium or provide an existing Chrome executable as the last argument.
-npx --prefix target/browser-tests playwright install chromium
-node tools/rpu-browser-e2e.cjs http://127.0.0.1:8765/editor.html /path/to/SLOT-CANDIDATE /path/to/rpu.dat /path/to/master.dat
-```
-
-On Windows use `npm.cmd` / `npx.cmd` if PowerShell blocks their .ps1 shims. The actual Windows test used installed Chrome as its last argument and did not install another browser. This opt-in test requires the baseline candidate hash, writes test results to rpu-browser-e2e-result.json, screenshot to ignored target/rpu-browser-mvp.png, and keeps downloaded evidence in a new temporary directory. It never writes its input folder or archives. Serving the build at the URL is a separate prerequisite.
+Use `python` on Windows. Portable Chromium smoke tests and the separate explicitly
+opt-in real-resource harness are documented in [BUILDING.md](BUILDING.md).
+Neither the untracked historical harness nor private runtime folders are build prerequisites.
 
 ## Remaining release work
 
